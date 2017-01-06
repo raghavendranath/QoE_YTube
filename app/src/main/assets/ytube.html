@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+<!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
+<div id="player"></div>
+
+<script>
+        // 2. This code loads the IFrame Player API code asynchronously.
+        var tag = document.createElement('script');
+
+        tag.src = "https://www.youtube.com/iframe_api";
+        var firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        // 3. This function creates an <iframe> (and YouTube player)
+        //    after the API code downloads.
+        var player;
+        var videos = ["i9TfbNKL2Ac", "Hjoq9j9IwbU","FFGnF9CyEZM","wnvWk7LQ0-U","JFBOjlnycLo","unohPcIr2Gs","3io_xuNPj_w","HE8gFs45n5I",
+"yspVOyp1bQE","ED1QTBR1Exs","ktuveiDDG7A"];
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player('player', {
+                <!--height: '320',-->
+                <!--width: '480',-->
+                videoId: videos[Math.floor((Math.random() * 10) + 1)],
+                events: {
+                    'onReady': onPlayerReady,
+                    'onStateChange': onPlayerStateChange,
+                    'onPlaybackQualityChange': onPlayerPlaybackQualityChange,
+                    'onPlaybackRateChange': onPlayerPlaybackRateChange,
+                    'onError': onPlayerError,
+                    'onApiChange': onPlayerApiChange,
+                }
+            });
+        }
+
+        var duration;
+        var currentTime;
+
+        var count = 0;
+
+
+
+        var dmExtPlayer, videoUrl, videoDuration, mcs_timer;
+        var playerSlider, leftTime, sc, progressC, progressB;
+        var playerState = "NA",
+            playbackQuality = "NA",
+            playbackRate = "NA";
+        var hasPlayer = false,
+            mcs_timerInterval = 500;
+
+        // variables to store progress and label and Video length
+        var label, completed, buffered;
+
+
+
+        add_handles();
+        hasPlayer = true;
+
+        function resetTimer() {
+            clearTimer();
+            mcs_timer = setInterval(messageContentScript, mcs_timerInterval);
+            //console.log(mcs_timerInterval);
+        }
+
+        function clearTimer() {
+            if (mcs_timer) {
+                clearInterval(mcs_timer);
+            }
+        }
+        console.log("Start_Time : " + Date.now() / 1000);
+
+        // listen to the onHasPlayer event, and add event handle
+        // to the miscellaneous player events dispatched by Youtube API
+
+
+
+        // The API will call this function when the video player is ready.
+        function onPlayerReady(event) {
+            console.log("Start_Time : " + Date.now() / 1000);
+            add_handles();
+        }
+
+        // The API calls this function when the player's state changes.
+        function onPlayerStateChange(event) {
+            switch (event.data) {
+                case YT.PlayerState.UNSTARTED:
+                    add_handles();
+                    break;
+                case YT.PlayerState.ENDED:
+                    add_handles();
+                    break;
+                case YT.PlayerState.PLAYING:
+                    add_handles();
+                    break;
+                case YT.PlayerState.PAUSED:
+                    add_handles();
+                    break;
+                case YT.PlayerState.BUFFERING:
+                    add_handles();
+                    break;
+                case YT.PlayerState.CUED:
+                    add_handles();
+                    break;
+            }
+        }
+
+        function onPlayerPlaybackQualityChange(playbackQuality) {
+            add_handles();
+        }
+
+        function onPlayerPlaybackRateChange(playbackRate) {
+            add_handles();
+        }
+
+        function onPlayerError(e) {
+            add_handles();
+        }
+
+        function onPlayerApiChange() {
+            add_handles();
+        }
+
+
+
+
+        function add_handles() {
+            init();
+        }
+
+        // functions used by handles
+        function init() {
+            logOnce();
+            resetTimer();
+            //console.log("yes video!");
+        }
+        var temp_dur = '0';
+        var temp_quality = '0';
+        var temp_currentTime = '0';
+        var temp_url = '0';
+        var temp_buffer = '0';
+        // log once to the youtube table in the server db
+        // about the basic video info per video play
+        function logOnce() {
+
+            realTime = Date.now();
+            temp_currentTime = player.getCurrentTime();
+            temp_dur = player.getDuration()
+            temp_buffer = (player.getVideoLoadedFraction() * (player.getDuration() - player.getCurrentTime())) + player.getCurrentTime();
+            temp_quality = player.getPlaybackQuality();
+
+
+            var realTime = new Date().getTime() / 1000;
+            console.log("FROM_INJECTED_ONCE," + realTime + ',' + temp_dur + ',' + temp_currentTime + ',' + temp_buffer + ',' + temp_quality + ',' + player.getPlayerState());
+
+
+            messageContentScript();
+        }
+
+        // being called repetitively by timer to log the real time streaming
+        function messageContentScript() {
+            // get time from youtube time bar;
+
+            var realTime = new Date().getTime() / 1000;
+            temp_dur = player.getDuration()
+            temp_currentTime = player.getCurrentTime();
+            //its a fraction. So multiplying it by 100
+            temp_buffer = (player.getVideoLoadedFraction() * (player.getDuration() - player.getCurrentTime())) + player.getCurrentTime();
+            temp_quality = player.getPlaybackQuality();
+            if (count == 1) {
+                    return;
+                }
+            if (temp_currentTime == temp_dur) {
+                if (count == 0) {
+                    console.log("End Time: " + Date.now() / 1000);
+                    count = 1;
+                }
+                if (count == 1) {
+                    return;
+                }
+            }
+            var now = new Date().getTime();
+            while (new Date().getTime() < now + 10) {
+
+            }
+
+            console.log("FROM_INJECTED_REPEAT," + realTime + ',' + temp_dur + ',' + temp_currentTime + ',' + temp_buffer + ',' + temp_quality + ',' + player.getPlayerState());
+
+        }
+    </script>
+</body>
+
+</html>
